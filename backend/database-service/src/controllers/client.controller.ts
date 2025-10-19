@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Post, Body, Query } from '@nestjs/common';
 import { ClientService } from '../services/client.service';
 import { CreateClientDto } from 'src/shared/dtos/create-client.dto';
 import { FindClientDto } from 'src/shared/dtos/find-client.dto';
@@ -12,7 +12,7 @@ export class ClientController {
     return this.clientService.create(createClientDto);
   }
 
-  @Get('find')
+  @Post('find')
   async findClient(@Query() findClientDto: FindClientDto) {
     return this.clientService.findByDocumentAndCellphone(findClientDto);
   }
