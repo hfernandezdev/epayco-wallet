@@ -13,7 +13,7 @@ export class ClientController {
   }
 
   @Post('find')
-  async findClient(@Query() findClientDto: FindClientDto) {
+  async findClient(@Body() findClientDto: FindClientDto) {
     return this.clientService.findByDocumentAndCellphone(findClientDto);
   }
 }
