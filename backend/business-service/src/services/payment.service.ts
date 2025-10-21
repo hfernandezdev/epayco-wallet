@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { createTransport, createTestAccount, getTestMessageUrl } from 'nodemailer';
 import { DatabaseClientService } from './database-client.service';
 import { InitiatePaymentDto } from '../shared/dtos/initiate-payment.dto';
 import { ConfirmPaymentDto } from '../shared/dtos/confirm-payment.dto';
@@ -190,15 +190,18 @@ export class PaymentService {
 
   private async sendTokenEmail(email: string, token: string, sessionId: string): Promise<boolean> {
     try {
-      const testAccount = await nodemailer.createTestAccount();
+      const testAccount = await createTestAccount();
 
-      const transporter = nodemailer.createTransporter({
+      const transporter = createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
         secure: false,
         auth: {
           user: testAccount.user,
           pass: testAccount.pass
+        },
+        tls: {
+          rejectUnauthorized: false
         }
       });
 
@@ -222,7 +225,7 @@ export class PaymentService {
 
       const info = await transporter.sendMail(mailOptions);
 
-      this.logger.log(`Token email sent to ${email}. Preview: ${nodemailer.getTestMessageUrl(info)}`);
+      this.logger.log(`Token email sent to ${email}. Preview: ${getTestMessageUrl(info)}`);
 
       return true;
     } catch (error) {
