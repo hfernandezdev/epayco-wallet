@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: epayco-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=epayco-wallet
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - epayco-network
+
+  database-service:
+    build:
+      context: ./database-service
+      dockerfile: Dockerfile
+    container_name: epayco-database-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/epayco-wallet
+      - NODE_ENV=production
+      - PORT=3001
+    depends_on:
+      - mongodb
+    networks:
+      - epayco-network
+    volumes:
+      - ./database-service:/app
+      - /app/node_modules
+
+  business-service:
+    build:
+      context: ./business-service
+      dockerfile: Dockerfile
+    container_name: epayco-business-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_SERVICE_URL=http://database-service:3001
+      - NODE_ENV=production
+      - PORT=3002
+    depends_on:
+      - database-service
+    networks:
+      - epayco-network
+    volumes:
+      - ./business-service:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    container_name: epayco-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Si usas la alternativa simple
+    environment:
+      - REACT_APP_API_URL=http://localhost:3002
+    depends_on:
+      - business-service
+    networks:
+      - epayco-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  epayco-network:
+    driver: bridge
